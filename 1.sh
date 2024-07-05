@@ -22,23 +22,23 @@ host() {
     sed -i 's/max_input_time = 60/max_input_time = 1000/' /etc/php/8.3/fpm/php.ini
     sudo service php8.3-fpm restart
     cat <<EOF > /etc/apache2/sites-available/mysite.conf
-    <VirtualHost *:80>
-         ServerName $domain
-         ServerAlias www.$domain
-         Protocols h2 http/1.1
-         DocumentRoot /var/www/html/
-         <Directory /var/www/html/>
-             Options -Indexes +FollowSymLinks
-             AllowOverride All
-             Require all granted
-         </Directory>
-     RewriteCond %{REQUEST_FILENAME} !-d
+<VirtualHost *:80>
+    ServerName $domain
+    ServerAlias www.$domain
+    Protocols h2 http/1.1
+    DocumentRoot /var/www/html/
+    <Directory /var/www/html/>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.+)$ /index.php/$1 [L]
-          ErrorLog ${APACHE_LOG_DIR}/error.log
-          CustomLog ${APACHE_LOG_DIR}/access.log combined  
-    </VirtualHost> 
-    EOF
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
     sudo a2ensite mysite.conf
     sudo systemctl restart apache2
     echo "<?php phpinfo();?>" > /var/www/html/index.php
@@ -47,7 +47,7 @@ host() {
 mysql() {
     apt install mysql-server -y
     mysql --user=root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$passdb';"
-    mysql -u root -p558416as -Bse "CREATE USER 'phenom'@'localhost' IDENTIFIED BY '558416as'; GRANT ALL ON *.* TO 'phenom'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES; exit;"
+    mysql -u root -p"$passdb" -Bse "CREATE USER 'phenom'@'localhost' IDENTIFIED BY '558416as'; GRANT ALL ON *.* TO 'phenom'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES; exit;"
     a2enmod rewrite
     systemctl restart apache2
     sudo chown -R www-data:www-data /var/www/html/
@@ -69,18 +69,16 @@ read -r -p "Escribe el dominio a configurar:" domain
 read -r -p "Usaras Base de datos [S/N] " response
 read -r -p "Necesitaras SSL? [S/N] " ssl
 
-if [ "$response" = y ]; then
+if [ "$response" = "S" ] || [ "$response" = "s" ]; then
     read -r -s -p "Teclea la contraseña de la base de datos:" passdb
     host
     mysql
-elif [ "$response" = n ]; then
+elif [ "$response" = "N" ] || [ "$response" = "n" ]; then
     echo "No se configurará base de datos."
-    exit 0
 fi
 
-if [ "$ssl" = y ]; then
+if [ "$ssl" = "S" ] || [ "$ssl" = "s" ]; then
     ssl
-elif [ "$ssl" = n ]; then
+elif [ "$ssl" = "N" ] || [ "$ssl" = "n" ]; then
     echo "No se configurará SSL."
-    exit 0
 fi
