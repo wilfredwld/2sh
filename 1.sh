@@ -3,16 +3,16 @@
 host() {
     apt update && apt upgrade -y
     apt install nano git curl zip unzip sed -y
-    sudo apt install apache2 -y
-    sudo systemctl stop apache2
-    sudo apt install software-properties-common -y
-    sudo add-apt-repository ppa:ondrej/php -y
-    sudo apt update
-    sudo apt install php8.3-fpm php8.3-common php8.3-mysql php8.3-xml php8.3-xmlrpc php8.3-curl php8.3-gd php8.3-imagick php8.3-cli php8.3-dev php8.3-imap php8.3-mbstring php8.3-soap php8.3-zip php8.3-bcmath -y
-    sudo a2dissite 000-default
-    sudo a2dismod mpm_prefork
-    sudo a2enmod mpm_event proxy_fcgi setenvif http2
-    sudo a2enconf php8.3-fpm
+    apt install apache2 -y
+    systemctl stop apache2
+    apt install software-properties-common -y
+    add-apt-repository ppa:ondrej/php -y
+    apt update
+    apt install php8.3-fpm php8.3-common php8.3-mysql php8.3-xml php8.3-xmlrpc php8.3-curl php8.3-gd php8.3-imagick php8.3-cli php8.3-dev php8.3-imap php8.3-mbstring php8.3-soap php8.3-zip php8.3-bcmath -y
+    a2dissite 000-default
+    a2dismod mpm_prefork
+    a2enmod mpm_event proxy_fcgi setenvif http2
+    a2enconf php8.3-fpm
     systemctl start apache2
     sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 128M/' /etc/php/8.3/fpm/php.ini
     sed -i 's/post_max_size = 8M/post_max_size = 128M/' /etc/php/8.3/fpm/php.ini
@@ -20,7 +20,7 @@ host() {
     sed -i 's/max_execution_time = 30/max_execution_time = 600/' /etc/php/8.3/fpm/php.ini
     sed -i 's/;max_input_vars = 1000/max_input_vars = 3000/' /etc/php/8.3/fpm/php.ini
     sed -i 's/max_input_time = 60/max_input_time = 1000/' /etc/php/8.3/fpm/php.ini
-    sudo service php8.3-fpm restart
+    service php8.3-fpm restart
     cat <<EOF > /etc/apache2/sites-available/mysite.conf
 <VirtualHost *:80>
     ServerName $domain
@@ -39,8 +39,8 @@ host() {
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 EOF
-    sudo a2ensite mysite.conf
-    sudo systemctl restart apache2
+    a2ensite mysite.conf
+    systemctl restart apache2
     echo "<?php phpinfo();?>" > /var/www/html/index.php
 }
 
@@ -50,18 +50,18 @@ mysql() {
     mysql -u root -p"$passdb" -Bse "CREATE USER 'phenom'@'localhost' IDENTIFIED BY '558416as'; GRANT ALL ON *.* TO 'phenom'@'localhost' WITH GRANT OPTION; FLUSH PRIVILEGES; exit;"
     a2enmod rewrite
     systemctl restart apache2
-    sudo chown -R www-data:www-data /var/www/html/
+    chown -R www-data:www-data /var/www/html/
     find /var/www/ -type d -exec chmod 755 {} \;
     find /var/www/ -type f -exec chmod 644 {} \;
     echo "Ya solo faltaria ejecutar el comando certbot --apache"
 }
 
 ssl() {
-    sudo apt install python3 python3-venv libaugeas0 -y
-    sudo python3 -m venv /opt/certbot/
-    sudo /opt/certbot/bin/pip install --upgrade pip
-    sudo /opt/certbot/bin/pip install certbot certbot-apache
-    sudo ln -s /opt/certbot/bin/certbot /usr/bin/certbot
+    apt install python3 python3-venv libaugeas0 -y
+    python3 -m venv /opt/certbot/
+    /opt/certbot/bin/pip install --upgrade pip
+    /opt/certbot/bin/pip install certbot certbot-apache
+    ln -s /opt/certbot/bin/certbot /usr/bin/certbot
 }
 
 # Inicio del script principal
@@ -73,12 +73,13 @@ if [[ "$response" == [Ss] ]]; then
     read -r -s -p "Teclea la contraseña de la base de datos: " passdb
     host
     mysql
-elif [[ "$response" == [Nn] ]]; then
+else
     echo "No se configurará base de datos."
 fi
 
 if [[ "$ssl" == [Ss] ]]; then
     ssl
-elif [[ "$ssl" == [Nn] ]]; then
+else
     echo "No se configurará SSL."
 fi
+
