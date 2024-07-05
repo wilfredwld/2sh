@@ -82,4 +82,4 @@ then
 ssl
 elif [$ssl = n]; 
 quit
-fi
+if
