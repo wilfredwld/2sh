@@ -67,7 +67,7 @@ ssl() {
 # Inicio del script principal
 read -r -p "Escribe el dominio a configurar:" domain
 read -r -p "Usaras Base de datos [S/N] " response
-read -r -p "Necesitaras SSL? [S/N]" ssl
+read -r -p "Necesitaras SSL? [S/N] " ssl
 
 if [ "$response" = y ]; then
     read -r -s -p "Teclea la contraseña de la base de datos:" passdb
